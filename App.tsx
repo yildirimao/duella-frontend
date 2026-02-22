@@ -13,9 +13,10 @@ export default function App() {
     <View style={styles.container}>
       <Text> hey corç </Text>
       <TouchableOpacity style={styles.button} onPress={handlePress}>
-        <Text style={styles.buttonText}>Hoşgeldiniz</Text>
+        <Text style={styles.buttonText}>Hoşgeldiniz lan</Text>
       </TouchableOpacity>
       <Text style={styles.counterText}>Butona basma sayısı: {count}</Text>
+      <Text>adam olun ulan</Text>
       <StatusBar style="auto" />
     </View>
   );
