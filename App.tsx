@@ -1,16 +1,16 @@
 import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Animated } from 'react-native';
 import { useState, useEffect, useRef } from 'react';
 
 const GRID_SIZE = 15; // 15x15 grid
 const CELL_SIZE = 20; // her hücre 20px
-const INITIAL_SNAKE = [
+const INITIAL_SNAKE: number[][] = [
   [7, 7],
   [6, 7],
   [5, 7],
 ]; // yılanın başlangıç pozisyonu (baş en sağda)
 const INITIAL_DIRECTION = 'RIGHT';
-const INITIAL_FOOD = [10, 10]; // geçici, rastgele ayarlanacak
+const INITIAL_FOOD: number[] = [10, 10]; // geçici, rastgele ayarlanacak
 
 const SnakeGame = () => {
   const [snake, setSnake] = useState(INITIAL_SNAKE);
@@ -18,11 +18,11 @@ const SnakeGame = () => {
   const [food, setFood] = useState(INITIAL_FOOD);
   const [gameOver, setGameOver] = useState(false);
   const [score, setScore] = useState(0);
-  const gameInterval = useRef(null);
+  const gameInterval = useRef<number | null>(null); // Tip düzeltmesi
 
   // Rastgele yem oluştur (yılanın üzerinde olmayacak)
-  const generateFood = (currentSnake) => {
-    let newFood;
+  const generateFood = (currentSnake: number[][]) => {
+    let newFood: number[];
     do {
       newFood = [
         Math.floor(Math.random() * GRID_SIZE),
@@ -47,7 +47,7 @@ const SnakeGame = () => {
 
     const newSnake = [...snake];
     const head = newSnake[0];
-    let newHead;
+    let newHead: number[];
 
     switch (direction) {
       case 'RIGHT':
@@ -99,7 +99,7 @@ const SnakeGame = () => {
   };
 
   // Yön değiştirme (ters yöne izin verme)
-  const changeDirection = (newDir) => {
+  const changeDirection = (newDir: string) => {
     if (
       (direction === 'RIGHT' && newDir !== 'LEFT') ||
       (direction === 'LEFT' && newDir !== 'RIGHT') ||
@@ -115,9 +115,11 @@ const SnakeGame = () => {
     if (gameOver) {
       if (gameInterval.current) clearInterval(gameInterval.current);
     } else {
-      gameInterval.current = setInterval(moveSnake, 200);
+      gameInterval.current = setInterval(moveSnake, 200) as unknown as number; // Tip dönüşümü
     }
-    return () => clearInterval(gameInterval.current);
+    return () => {
+      if (gameInterval.current) clearInterval(gameInterval.current);
+    };
   }, [snake, direction, food, gameOver]);
 
   // İlk yemi oluştur
@@ -258,6 +260,25 @@ const gameStyles = StyleSheet.create({
 
 export default function App() {
   const [count, setCount] = useState(0);
+  const fadeAnim = useRef(new Animated.Value(1)).current; // Başlangıç opaklığı 1
+
+  useEffect(() => {
+    // Yanıp sönme animasyonu
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+        Animated.timing(fadeAnim, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+  }, [fadeAnim]);
 
   const handlePress = () => {
     setCount(count + 1);
@@ -268,7 +289,7 @@ export default function App() {
       {/* Yılan oyunu üst kısımda */}
       <SnakeGame />
       
-      {/* Alt kısım: buton ve yazılar (argo ifadeler korundu) */}
+      {/* Alt kısım: buton ve yazılar */}
       <View style={styles.bottomSection}>
         <Text style={styles.greeting}> hey corç </Text>
         <TouchableOpacity style={styles.button} onPress={handlePress}>
@@ -276,6 +297,11 @@ export default function App() {
         </TouchableOpacity>
         <Text style={styles.counterText}>Butona basma sayısı: {count}</Text>
         <Text style={styles.insult}>adam olun ulan</Text>
+        
+        {/* Yanıp sönen göt ahmet yazısı */}
+        <Animated.Text style={[styles.blinkingText, { opacity: fadeAnim }]}>
+          göt ahmet
+        </Animated.Text>
       </View>
       
       <StatusBar style="auto" />
@@ -319,5 +345,11 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 14,
     color: '#666',
+  },
+  blinkingText: {
+    marginTop: 15,
+    fontSize: 20,
+    fontWeight: 'bold',
+    color: 'red',
   },
 });
