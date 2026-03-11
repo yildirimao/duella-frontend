@@ -3,336 +3,374 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
-  Image,
-  FlatList,
+  ScrollView,
+  Modal,
+  Pressable,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Ionicons } from '@expo/vector-icons';
+import { colors } from '../theme/colors';
 
-// Tipler
-type GameMode = {
-  id: string;
-  name: string;
-};
-
-type Player = {
-  id: string;
-  name: string;
-  avatar: string;
-  tags: string[];
-  mutualFriends: number;
-};
-
-// Örnek veriler
-const gameModes: GameMode[] = [
-  { id: '1', name: 'Klasik' },
-  { id: '2', name: 'Canlı 3' },
-  { id: '3', name: 'Yeni Oyun' },
-];
-
-const categories: string[] = ['Tüm', 'Öneriler'];
-
-const suggestedPlayers: Player[] = [
+const gameModes = [
   {
-    id: '1',
-    name: 'snow.woman',
-    avatar: 'https://i.pravatar.cc/100?u=1',
-    tags: ['#Senin için'],
-    mutualFriends: 2,
+    title: '1v1 Duello',
+    subtitle: 'Klasik Eslestirme',
+    description: 'Tek bir rakibe karsi kafa kafaya oyna, en yuksek skoru yap.',
+    icon: 'people-outline' as const,
+    iconColor: colors.secondary,
   },
   {
-    id: '2',
-    name: 'candyyygirl',
-    avatar: 'https://i.pravatar.cc/100?u=2',
-    tags: ['#ŞimdiÇevrimiçi', '#Senin için'],
-    mutualFriends: 0,
+    title: 'Zamana Karsi Yaris',
+    subtitle: 'Hiz ve Dogruluk',
+    description: 'Sure dolmadan sorulari bitir, seri cevaplarla puan carpani yakala.',
+    icon: 'timer-outline' as const,
+    iconColor: colors.accent,
   },
   {
-    id: '3',
-    name: 'bkemuk',
-    avatar: 'https://i.pravatar.cc/100?u=3',
-    tags: ['#Benzerİstatistiği'],
-    mutualFriends: 1,
+    title: 'Coklu Duello',
+    subtitle: '1v1 Formatinda Turnuva',
+    description: 'Birden fazla oyuncunun katildigi eslesmelerde tur atla, finale kadar ilerle.',
+    icon: 'git-network-outline' as const,
+    iconColor: colors.primary,
   },
 ];
 
-// Alt bileşenler
-const Header = () => (
-  <View style={styles.header}>
-    <Text style={styles.headerTitle}>Bir oyuncu arayın</Text>
-    <TouchableOpacity>
-      <Ionicons name="search" size={24} color="#333" />
-    </TouchableOpacity>
-  </View>
-);
-
-const PrimeBanner = () => (
-  <View style={styles.banner}>
-    <View>
-      <Text style={styles.bannerTitle}>PRIME</Text>
-      <Text style={styles.bannerSubtitle}>Ücretsiz deneme</Text>
-    </View>
-    <TouchableOpacity style={styles.bannerButton}>
-      <Text style={styles.bannerButtonText}>Dene</Text>
-    </TouchableOpacity>
-  </View>
-);
-
-const GameModes = () => (
-  <View style={styles.gameModesContainer}>
-    <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-      {gameModes.map((mode) => (
-        <TouchableOpacity key={mode.id} style={styles.gameModeChip}>
-          <Text style={styles.gameModeText}>{mode.name}</Text>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
-  </View>
-);
-
-const CategoryTabs = () => {
-  const [selectedCategory, setSelectedCategory] = useState<string>('Tüm');
-  return (
-    <View style={styles.categoryContainer}>
-      {categories.map((cat) => (
-        <TouchableOpacity
-          key={cat}
-          style={[
-            styles.categoryTab,
-            selectedCategory === cat && styles.categoryTabActive,
-          ]}
-          onPress={() => setSelectedCategory(cat)}
-        >
-          <Text
-            style={[
-              styles.categoryText,
-              selectedCategory === cat && styles.categoryTextActive,
-            ]}
-          >
-            {cat}
-          </Text>
-        </TouchableOpacity>
-      ))}
-    </View>
-  );
-};
-
-type PlayerCardProps = {
-  player: Player;
-};
-
-const PlayerCard = ({ player }: PlayerCardProps) => (
-  <View style={styles.playerCard}>
-    <Image source={{ uri: player.avatar }} style={styles.avatar} />
-    <View style={styles.playerInfo}>
-      <Text style={styles.playerName}>{player.name}</Text>
-      {player.mutualFriends > 0 && (
-        <Text style={styles.mutualFriends}>{player.mutualFriends} ortak arkadaş</Text>
-      )}
-      <View style={styles.tagsContainer}>
-        {player.tags.map((tag: string, index: number) => (
-          <View key={index} style={styles.tag}>
-            <Text style={styles.tagText}>{tag}</Text>
-          </View>
-        ))}
-      </View>
-    </View>
-    <TouchableOpacity style={styles.inviteButton}>
-      <Text style={styles.inviteButtonText}>Davet Et</Text>
-    </TouchableOpacity>
-  </View>
-);
-
-const PlayersList = () => (
-  <FlatList
-    data={suggestedPlayers}
-    keyExtractor={(item) => item.id}
-    renderItem={({ item }) => <PlayerCard player={item} />}
-    contentContainerStyle={styles.listContainer}
-    showsVerticalScrollIndicator={false}
-    scrollEnabled={false} // ScrollView içinde olduğu için
-  />
-);
-
-// Ana bileşen
 const HomeScreen = () => {
+  const [isModeFlyoutVisible, setIsModeFlyoutVisible] = useState(false);
+
   return (
-    <View style={styles.container}>
-      <Header />
-      <ScrollView showsVerticalScrollIndicator={false}>
-        <PrimeBanner />
-        <GameModes />
-        <CategoryTabs />
-        <PlayersList />
+    <SafeAreaView style={styles.safeArea}>
+      <ScrollView contentContainerStyle={styles.container}>
+        <View style={styles.pageHeader}>
+          <Text style={styles.pageTitle}>Duella Quiz</Text>
+          <Text style={styles.pageSubtitle}>KPSS</Text>
+        </View>
+
+        <View style={styles.heroCard}>
+          <Text style={styles.heroTitle}>Bilgini konuştur</Text>
+          <Text style={styles.heroSubtitle}>
+            Günlük quizlere katıl, puan topla, sıralamada yüksel.
+          </Text>
+
+          <TouchableOpacity
+            style={styles.heroButton}
+            onPress={() => setIsModeFlyoutVisible(true)}
+          >
+            <Text style={styles.heroButtonText}>Hemen Başla</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.statsRow}>
+          <View style={[styles.statCard, { backgroundColor: colors.primary }]}>
+            <Ionicons name="flash" size={22} color={colors.white} />
+            <Text style={styles.statValue}>2450</Text>
+            <Text style={styles.statLabel}>Toplam Puan</Text>
+          </View>
+
+          <View style={[styles.statCard, { backgroundColor: colors.secondary }]}>
+            <Ionicons name="trophy" size={22} color={colors.black} />
+            <Text style={[styles.statValue, { color: colors.black }]}>12</Text>
+            <Text style={[styles.statLabel, { color: colors.black }]}>
+              Kazanılan Rozet
+            </Text>
+          </View>
+        </View>
+
+        <Text style={styles.sectionTitle}>Hızlı Erişim</Text>
+
+        <View style={styles.quickGrid}>
+          <TouchableOpacity style={styles.quickCard}>
+            <Ionicons name="play-circle" size={28} color={colors.accent} />
+            <Text style={styles.quickTitle}>Hızlı Oyun</Text>
+            <Text style={styles.quickText}>Anında quiz başlat</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.quickCard}>
+            <Ionicons name="people" size={28} color={colors.secondary} />
+            <Text style={styles.quickTitle}>Düello</Text>
+            <Text style={styles.quickText}>Rakiple yarış</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.quickCard}>
+            <Ionicons name="gift" size={28} color={colors.primary} />
+            <Text style={styles.quickTitle}>Ödüller</Text>
+            <Text style={styles.quickText}>Görevleri tamamla</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity style={styles.quickCard}>
+            <Ionicons name="stats-chart" size={28} color={colors.accent} />
+            <Text style={styles.quickTitle}>İstatistik</Text>
+            <Text style={styles.quickText}>Performansını gör</Text>
+          </TouchableOpacity>
+        </View>
+
       </ScrollView>
-    </View>
+
+      <Modal
+        animationType="fade"
+        transparent
+        visible={isModeFlyoutVisible}
+        onRequestClose={() => setIsModeFlyoutVisible(false)}
+      >
+        <Pressable
+          style={styles.flyoutOverlay}
+          onPress={() => setIsModeFlyoutVisible(false)}
+        >
+          <Pressable style={styles.flyoutSheet}>
+            <View style={styles.flyoutHandle} />
+
+            <View style={styles.flyoutHeader}>
+              <View>
+                <Text style={styles.flyoutTitle}>Oyun Modu Sec</Text>
+                <Text style={styles.flyoutSubtitle}>
+                  Sana uygun modu sec ve hemen oyuna gir.
+                </Text>
+              </View>
+
+              <TouchableOpacity
+                style={styles.flyoutCloseButton}
+                onPress={() => setIsModeFlyoutVisible(false)}
+              >
+                <Ionicons name="close" size={20} color={colors.white} />
+              </TouchableOpacity>
+            </View>
+
+            {gameModes.map((mode) => (
+              <TouchableOpacity key={mode.title} style={styles.modeCard}>
+                <View style={styles.modeHeader}>
+                  <View style={styles.modeCopy}>
+                    <Text style={styles.modeTitle}>{mode.title}</Text>
+                    <Text style={styles.modeSubtitle}>{mode.subtitle}</Text>
+                  </View>
+
+                  <View style={styles.modeIconBadge}>
+                    <Ionicons name={mode.icon} size={22} color={mode.iconColor} />
+                  </View>
+                </View>
+
+                <Text style={styles.modeText}>{mode.description}</Text>
+              </TouchableOpacity>
+            ))}
+          </Pressable>
+        </Pressable>
+      </Modal>
+    </SafeAreaView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#f8f9fa',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 20,
-    paddingTop: 20,
-    paddingBottom: 10,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#f0f0f0',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: '#333',
-  },
-  banner: {
-    backgroundColor: '#6c5ce7',
-    margin: 20,
-    padding: 20,
-    borderRadius: 15,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    shadowColor: '#6c5ce7',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 5,
-    elevation: 8,
-  },
-  bannerTitle: {
-    color: '#fff',
-    fontSize: 24,
-    fontWeight: 'bold',
-  },
-  bannerSubtitle: {
-    color: '#fff',
-    fontSize: 14,
-    opacity: 0.9,
-    marginTop: 4,
-  },
-  bannerButton: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 25,
-  },
-  bannerButtonText: {
-    color: '#6c5ce7',
-    fontWeight: 'bold',
-  },
-  gameModesContainer: {
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  gameModeChip: {
-    backgroundColor: '#fff',
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderRadius: 25,
-    marginRight: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
-  },
-  gameModeText: {
-    color: '#333',
-    fontWeight: '500',
-  },
-  categoryContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    marginBottom: 20,
-  },
-  categoryTab: {
-    paddingHorizontal: 20,
-    paddingVertical: 8,
-    marginRight: 10,
-    borderRadius: 20,
-    backgroundColor: '#f0f0f0',
-  },
-  categoryTabActive: {
-    backgroundColor: '#6c5ce7',
-  },
-  categoryText: {
-    color: '#666',
-    fontWeight: '500',
-  },
-  categoryTextActive: {
-    color: '#fff',
-  },
-  listContainer: {
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-  },
-  playerCard: {
-    flexDirection: 'row',
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 15,
-    marginBottom: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
-  },
-  avatar: {
-    width: 50,
-    height: 50,
-    borderRadius: 25,
-    marginRight: 15,
-  },
-  playerInfo: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  playerName: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 2,
-  },
-  mutualFriends: {
-    fontSize: 12,
-    color: '#999',
-    marginBottom: 4,
-  },
-  tagsContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-  },
-  tag: {
-    backgroundColor: '#f0f0f0',
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: 12,
-    marginRight: 6,
-    marginBottom: 4,
-  },
-  tagText: {
-    fontSize: 10,
-    color: '#666',
-  },
-  inviteButton: {
-    backgroundColor: '#6c5ce7',
-    paddingHorizontal: 15,
-    paddingVertical: 8,
-    borderRadius: 20,
-    alignSelf: 'center',
-  },
-  inviteButtonText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-});
 
 export default HomeScreen;
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  container: {
+    padding: 20,
+    paddingTop: 36,
+    paddingBottom: 220,
+  },
+  pageHeader: {
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  pageTitle: {
+    color: colors.white,
+    fontFamily: 'LilitaOne',
+    fontSize: 42,
+    textAlign: 'center',
+    lineHeight: 46,
+    letterSpacing: 0.5,
+  },
+  pageSubtitle: {
+    color: colors.accent,
+    fontFamily: 'LilitaOne',
+    fontSize: 24,
+    letterSpacing: 1.5,
+    marginTop: 2,
+    textAlign: 'center',
+  },
+  heroCard: {
+    backgroundColor: colors.surface,
+    borderRadius: 24,
+    padding: 20,
+    borderWidth: 1,
+    borderColor: colors.border,
+    marginBottom: 20,
+  },
+  heroTitle: {
+    color: colors.white,
+    fontSize: 24,
+    fontWeight: '800',
+    marginBottom: 8,
+  },
+  heroSubtitle: {
+    color: colors.mutedText,
+    fontSize: 14,
+    lineHeight: 22,
+    marginBottom: 16,
+  },
+  heroButton: {
+    backgroundColor: colors.accent,
+    paddingVertical: 14,
+    borderRadius: 16,
+    alignItems: 'center',
+  },
+  heroButtonText: {
+    color: colors.black,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  statsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    marginBottom: 24,
+  },
+  statCard: {
+    flex: 1,
+    borderRadius: 20,
+    padding: 16,
+  },
+  statValue: {
+    color: colors.white,
+    fontSize: 22,
+    fontWeight: '800',
+    marginTop: 10,
+  },
+  statLabel: {
+    color: colors.white,
+    fontSize: 13,
+    marginTop: 4,
+  },
+  sectionTitle: {
+    color: colors.white,
+    fontSize: 18,
+    fontWeight: '800',
+    marginBottom: 12,
+    marginTop: 6,
+  },
+  quickGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
+    marginBottom: 24,
+  },
+  quickCard: {
+    width: '48%',
+    backgroundColor: colors.surface,
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  quickTitle: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: '700',
+    marginTop: 10,
+    marginBottom: 4,
+  },
+  quickText: {
+    color: colors.mutedText,
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  flyoutOverlay: {
+    flex: 1,
+    justifyContent: 'flex-start',
+    backgroundColor: 'rgba(17, 17, 17, 0.45)',
+  },
+  flyoutSheet: {
+    backgroundColor: colors.surface,
+    borderRadius: 28,
+    paddingHorizontal: 20,
+    paddingTop: 14,
+    paddingBottom: 28,
+    marginTop: 72,
+    marginHorizontal: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  flyoutHandle: {
+    alignSelf: 'center',
+    width: 54,
+    height: 5,
+    borderRadius: 999,
+    backgroundColor: colors.tabInactive,
+    marginBottom: 18,
+  },
+  flyoutHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 18,
+  },
+  flyoutTitle: {
+    color: colors.white,
+    fontSize: 22,
+    fontWeight: '800',
+    marginBottom: 6,
+  },
+  flyoutSubtitle: {
+    color: colors.mutedText,
+    fontSize: 14,
+    lineHeight: 20,
+    maxWidth: 240,
+  },
+  flyoutCloseButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  modeCard: {
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.background,
+  },
+  modeHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-start',
+    marginBottom: 10,
+  },
+  modeCopy: {
+    flex: 1,
+    paddingRight: 12,
+  },
+  modeTitle: {
+    color: colors.accent,
+    fontSize: 17,
+    fontWeight: '800',
+    marginBottom: 4,
+  },
+  modeSubtitle: {
+    color: colors.secondary,
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  modeIconBadge: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  modeText: {
+    color: colors.mutedText,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+});
